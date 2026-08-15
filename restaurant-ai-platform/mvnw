@@ -1,0 +1,32 @@
+#!/bin/sh
+# ----------------------------------------------------------------------------
+# Maven Wrapper startup script (script-only distribution type, v3.3.2)
+# Downloads and runs the exact Maven version pinned in maven-wrapper.properties,
+# so `./mvnw clean compile` works without Maven being installed globally.
+# ----------------------------------------------------------------------------
+
+set -e
+
+BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
+WRAPPER_PROPERTIES="$BASE_DIR/.mvn/wrapper/maven-wrapper.properties"
+DISTRIBUTION_URL=$(grep '^distributionUrl=' "$WRAPPER_PROPERTIES" | cut -d'=' -f2-)
+
+MAVEN_HOME="$BASE_DIR/.mvn/wrapper/dists/$(basename "$DISTRIBUTION_URL" .zip)"
+
+if [ ! -d "$MAVEN_HOME" ]; then
+  echo "Downloading Maven distribution: $DISTRIBUTION_URL"
+  TMP_ZIP="$(mktemp).zip"
+  mkdir -p "$BASE_DIR/.mvn/wrapper/dists"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL -o "$TMP_ZIP" "$DISTRIBUTION_URL"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q -O "$TMP_ZIP" "$DISTRIBUTION_URL"
+  else
+    echo "ERROR: need curl or wget to download Maven. Install one, or install Maven directly and use 'mvn' instead of './mvnw'." >&2
+    exit 1
+  fi
+  unzip -q "$TMP_ZIP" -d "$BASE_DIR/.mvn/wrapper/dists"
+  rm -f "$TMP_ZIP"
+fi
+
+exec "$MAVEN_HOME/bin/mvn" "$@"

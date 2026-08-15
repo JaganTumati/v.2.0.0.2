@@ -1,0 +1,48 @@
+{
+  "name": "restaurant-ai-platform",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "21",
+      "installMaven": "true",
+      "mavenVersion": "3.9.9"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+
+  // Backend (8080), frontend dev server (5173), Postgres (5432, rarely needed
+  // directly but handy for a local DB client).
+  "forwardPorts": [8080, 5173, 5432],
+  "portsAttributes": {
+    "8080": { "label": "Backend API" },
+    "5173": { "label": "Frontend (Vite)" },
+    "5432": { "label": "Postgres" }
+  },
+
+  // Runs once when the Codespace is first created: makes mvnw executable,
+  // copies env templates so you only need to fill in real values (never
+  // commit the resulting .env/.env.local - both are gitignored), and
+  // installs frontend dependencies so `npm run dev` works immediately.
+  "postCreateCommand": "chmod +x mvnw && [ -f .env ] || cp .env.example .env && cd frontend && npm install && [ -f .env.local ] || cp .env.example .env.local",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-spring-boot",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+
+  "remoteUser": "vscode"
+}

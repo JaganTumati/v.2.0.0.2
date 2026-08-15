@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: restaurant-ai-postgres
+    environment:
+      POSTGRES_DB: restaurant_ai
+      POSTGRES_USER: restaurant_ai
+      POSTGRES_PASSWORD: restaurant_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - restaurant_ai_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U restaurant_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: restaurant-ai-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DATABASE_URL: jdbc:postgresql://postgres:5432/restaurant_ai
+      DATABASE_USERNAME: restaurant_ai
+      DATABASE_PASSWORD: restaurant_ai
+      JWT_SECRET: ${JWT_SECRET:-dev_only_change_me_32_characters_min}
+      MOCK_WHATSAPP: ${MOCK_WHATSAPP:-true}
+      WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN:-}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN:-}
+      WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET:-}
+      MOCK_GEMINI: ${MOCK_GEMINI:-false}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+    ports:
+      - "8080:8080"
+
+volumes:
+  restaurant_ai_pgdata:

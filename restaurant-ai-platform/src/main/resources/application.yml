@@ -1,0 +1,85 @@
+spring:
+  application:
+    name: restaurant-ai-platform
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+
+app:
+  restaurant:
+    # MVP is single-restaurant, but every query is still scoped by restaurant-id
+    # so the system is tenant-ready without a rewrite.
+    default-id: ${DEFAULT_RESTAURANT_ID:00000000-0000-0000-0000-000000000001}
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-ttl-minutes: 30
+    refresh-token-ttl-days: 7
+  whatsapp:
+    mock: ${MOCK_WHATSAPP:true}
+    access-token: ${WHATSAPP_ACCESS_TOKEN:}
+    phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+    verify-token: ${WHATSAPP_VERIFY_TOKEN:}
+    app-secret: ${WHATSAPP_APP_SECRET:}
+    graph-api-base-url: https://graph.facebook.com/v20.0
+  gemini:
+    mock: ${MOCK_GEMINI:false}
+    api-key: ${GEMINI_API_KEY}
+    model: ${GEMINI_MODEL:gemini-2.5-flash}
+    max-output-tokens: 1024
+    base-url: https://generativelanguage.googleapis.com/v1beta/models
+  conversation:
+    history-window-size: 20
+    summarize-every-n-messages: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      geminiApi:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 3
+  retry:
+    instances:
+      geminiApi:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.web.reactive.function.client.WebClientResponseException$TooManyRequests
+          - java.util.concurrent.TimeoutException
+      whatsappApi:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+  timelimiter:
+    instances:
+      geminiApi:
+        timeout-duration: 20s
+

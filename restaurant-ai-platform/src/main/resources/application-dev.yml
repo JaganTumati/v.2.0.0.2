@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/restaurant_ai}
+    username: ${DATABASE_USERNAME:restaurant_ai}
+    password: ${DATABASE_PASSWORD:restaurant_ai}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.restaurant.ai: DEBUG
+    org.hibernate.SQL: DEBUG
