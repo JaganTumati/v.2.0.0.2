@@ -42,7 +42,7 @@ app:
   gemini:
     mock: ${MOCK_GEMINI:false}
     api-key: ${GEMINI_API_KEY}
-    model: ${GEMINI_MODEL:gemini-2.5-flash}
+    model: ${GEMINI_MODEL:gemini-3.6-flash}
     max-output-tokens: 1024
     base-url: https://generativelanguage.googleapis.com/v1beta/models
   conversation:

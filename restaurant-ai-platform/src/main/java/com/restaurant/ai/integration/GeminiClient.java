@@ -51,6 +51,12 @@ public class GeminiClient {
                     log.warn("Gemini API rate limit hit");
                     return resp.createException();
                 })
+                .onStatus(status -> status.isError(), resp -> resp.bodyToMono(String.class)
+                        .defaultIfEmpty("<empty response body>")
+                        .map(body -> {
+                            log.error("Gemini API returned HTTP {}: {}", resp.statusCode().value(), body);
+                            return new IllegalStateException("Gemini API returned HTTP " + resp.statusCode().value());
+                        }))
                 .bodyToMono(GeminiGenerateResponse.class)
                 .timeout(Duration.ofSeconds(20))
                 .toFuture();
