@@ -33,7 +33,7 @@ app:
     access-token-ttl-minutes: 30
     refresh-token-ttl-days: 7
   whatsapp:
-    mock: ${MOCK_WHATSAPP:true}
+    mock: ${MOCK_WHATSAPP:false}
     access-token: ${WHATSAPP_ACCESS_TOKEN:}
     phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
     verify-token: ${WHATSAPP_VERIFY_TOKEN:}
@@ -67,11 +67,15 @@ resilience4j:
     instances:
       geminiApi:
         max-attempts: 3
-        wait-duration: 500ms
+        wait-duration: 2s
         enable-exponential-backoff: true
         exponential-backoff-multiplier: 2
         retry-exceptions:
           - org.springframework.web.reactive.function.client.WebClientResponseException$TooManyRequests
+          - org.springframework.web.reactive.function.client.WebClientResponseException$InternalServerError
+          - org.springframework.web.reactive.function.client.WebClientResponseException$BadGateway
+          - org.springframework.web.reactive.function.client.WebClientResponseException$ServiceUnavailable
+          - org.springframework.web.reactive.function.client.WebClientResponseException$GatewayTimeout
           - java.util.concurrent.TimeoutException
       whatsappApi:
         max-attempts: 3
@@ -82,4 +86,3 @@ resilience4j:
     instances:
       geminiApi:
         timeout-duration: 20s
-

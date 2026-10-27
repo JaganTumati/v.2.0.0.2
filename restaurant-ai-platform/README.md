@@ -1,6 +1,6 @@
 # Restaurant AI WhatsApp Automation Platform
 
-Single-restaurant MVP: Spring Boot 3 / Java 21 backend, Gemini for the AI/tool-calling
+Single-restaurant MVP: Spring Boot 3 / Java 25 runtime (Java 21 build target) backend, Gemini for the AI/tool-calling
 loop, PostgreSQL, mock WhatsApp (real Meta adapter exists but is dormant), and a
 React dashboard.
 

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -77,6 +78,10 @@ public class RealWhatsAppClient implements WhatsAppClient {
                     .retrieve()
                     .toBodilessEntity()
                     .block();
+                } catch (WebClientResponseException e) {
+                    log.error("Meta WhatsApp API rejected message to {}: status={}, response={}",
+                        toWhatsappNumber, e.getStatusCode(), e.getResponseBodyAsString(), e);
+                    throw e;
         } catch (Exception e) {
             // Never let an outbound WhatsApp failure surface a fake success up the stack.
             log.error("Failed to send WhatsApp message to {}", toWhatsappNumber, e);

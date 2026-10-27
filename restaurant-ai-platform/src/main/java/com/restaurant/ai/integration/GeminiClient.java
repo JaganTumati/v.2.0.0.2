@@ -47,15 +47,14 @@ public class GeminiClient {
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()
-                .onStatus(status -> status.value() == 429, resp -> {
-                    log.warn("Gemini API rate limit hit");
-                    return resp.createException();
-                })
-                .onStatus(status -> status.isError(), resp -> resp.bodyToMono(String.class)
-                        .defaultIfEmpty("<empty response body>")
-                        .map(body -> {
-                            log.error("Gemini API returned HTTP {}: {}", resp.statusCode().value(), body);
-                            return new IllegalStateException("Gemini API returned HTTP " + resp.statusCode().value());
+                .onStatus(status -> status.isError(), resp -> resp.createException()
+                        .doOnNext(error -> {
+                            if (error.getStatusCode().value() == 429) {
+                                log.warn("Gemini API rate limit hit: {}", error.getResponseBodyAsString());
+                            } else {
+                                log.error("Gemini API returned HTTP {}: {}",
+                                        error.getStatusCode().value(), error.getResponseBodyAsString());
+                            }
                         }))
                 .bodyToMono(GeminiGenerateResponse.class)
                 .timeout(Duration.ofSeconds(20))
