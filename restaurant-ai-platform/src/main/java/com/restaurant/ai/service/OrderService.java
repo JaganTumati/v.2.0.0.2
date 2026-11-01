@@ -144,8 +144,9 @@ public class OrderService {
             throw new BusinessRuleViolationException(
                     "This order can no longer be cancelled (current status: " + order.getStatus() + "). Please contact the restaurant.");
         }
+        String previousStatus = order.getStatus();
         order.setStatus("CANCELLED");
-        fireStatusChanged(order);
+        fireStatusChanged(order, previousStatus);
         return toResponse(order);
     }
 
@@ -157,31 +158,35 @@ public class OrderService {
             throw new BusinessRuleViolationException(
                     "This order can no longer be cancelled (current status: " + order.getStatus() + ").");
         }
+        String previousStatus = order.getStatus();
         order.setStatus("CANCELLED");
-        fireStatusChanged(order);
+        fireStatusChanged(order, previousStatus);
         return toResponse(order);
     }
 
     @Transactional
     public OrderResponse transition(UUID restaurantId, UUID orderId, String toStatus) {
         Order order = findOrThrow(restaurantId, orderId);
-        if (!OrderStateMachine.isTransitionAllowed(order.getStatus(), toStatus)) {
+        String previousStatus = order.getStatus();
+        if (!OrderStateMachine.isTransitionAllowed(previousStatus, toStatus)) {
             throw new BusinessRuleViolationException(
-                    "Cannot move order from " + order.getStatus() + " to " + toStatus + ".");
+                    "Cannot move order from " + previousStatus + " to " + toStatus + ".");
         }
         order.setStatus(toStatus);
-        fireStatusChanged(order);
+        fireStatusChanged(order, previousStatus);
         return toResponse(order);
     }
 
     /** Phase 15: fires ORDER_STATUS_CHANGED for any active automation rules. Never lets a rule failure affect the order itself. */
-    private void fireStatusChanged(Order order) {
+    private void fireStatusChanged(Order order, String previousStatus) {
         // Mutable map, not Map.of() - Map.of() rejects null values, and conversationId
         // is legitimately null for takeaway/no-conversation orders. AutomationEngine's
         // action handlers (e.g. ESCALATE) cast this straight to UUID, so a sentinel
         // string here would cause a ClassCastException instead of a clean no-op.
         java.util.Map<String, Object> eventData = new java.util.HashMap<>();
         eventData.put("orderId", order.getId());
+        eventData.put("orderReference", order.getId().toString().substring(0, 8).toUpperCase(java.util.Locale.ROOT));
+        eventData.put("previousStatus", previousStatus);
         eventData.put("status", order.getStatus());
         eventData.put("customerId", order.getCustomerId());
         eventData.put("conversationId", order.getConversationId());
